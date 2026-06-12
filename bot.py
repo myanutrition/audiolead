@@ -572,17 +572,17 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         clicks_text = "  Пока нет кликов\n"
 
     text = (
-        f"📊 *Статистика бота*\n\n"
+        f"📊 Статистика бота\n\n"
         f"👥 Всего пользователей: {s['total']}\n"
         f"🆕 Новых за неделю: {s['new_week']}\n"
         f"🚫 Заблокировали бота: {s['blocked']}\n"
         f"❌ Не подписались и ушли: {s['not_subscribed']}\n"
         f"✅ Завершили серию (День 7): {s['completed']}\n\n"
-        f"📅 *По дням:*\n{days_text}\n"
-        f"🔘 *Клики по кнопкам:*\n{clicks_text}"
+        f"📅 По дням:\n{days_text}\n"
+        f"🔘 Клики по кнопкам:\n{clicks_text}"
     )
 
-    await update.message.reply_text(text, parse_mode="Markdown")
+    await update.message.reply_text(text)
 
 
 async def test_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
