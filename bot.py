@@ -6,35 +6,33 @@ import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler,
-    ContextTypes, JobQueue
+    ContextTypes
 )
 
 # ==================== НАСТРОЙКИ ====================
-BOT_TOKEN = os.getenv("BOT_TOKEN")  # токен берётся из переменной окружения — безопасно 🔒
-CHANNEL_USERNAME = "@myanutrition"  # канал для проверки подписки
-SEND_HOUR = 10  # час отправки (10:00)
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+CHANNEL_USERNAME = "@myanutrition"
+SEND_HOUR = 10
 SEND_MINUTE = 0
 
 # ==================== FILE IDs ====================
-VIDEO_NOTE_WELCOME = "DQACAgIAAxkBAAMMaiuiteKw6_6ObTR2rjTa2cMKCc0AAnmUAAKxY2BJPA9sVN6YUVw8BA"
-VIDEO_NOTE_FINAL = "DQACAgIAAxkBAAMNaiukOuCMSXh2IK8ViaNDkjgqitUAAnuUAAKxY2BJx2IupzoJWSE8BA"
+VIDEO_NOTE_WELCOME = "DQACAgIAAxkBAAMmaivD3RNQAAGqPsePgjt-3pvjfu8kAAJRlQACsWNgSaHwSjhTtWBXPAQ"
+VIDEO_NOTE_FINAL = "DQACAgIAAxkDAAMjaiu4TIfoRkGRS7rqDomugaOruV8AAnuUAAKxY2BJx2IupzoJWSE8BA"
 
 AUDIOS = {
-    0: "CQACAgIAAxkBAAMEaipgNBWXHW3d8xDGlE2jtTzTeLYAAjmZAAK-wFhJPnUpbFaBo0A7BA",
-    1: "CQACAgIAAxkBAAMFaipgiLgG-Jdz-TgLdVt_oEL1ZHYAAj2ZAAK-wFhJm78AAcnFCRqvOwQ",
-    2: "CQACAgIAAxkBAAMGaipgo9nVk8bL0sEV2wABbHyizVDVAAJAmQACvsBYSaX4cWh5pKRqOwQ",
-    3: "CQACAgIAAxkBAAMHaipgrX_FhnRumfX4PIDhH70vsy0AAkGZAAK-wFhJZVzdZunZM4A7BA",
-    4: "CQACAgIAAxkBAAMIaipgwJ7tRpOG13lMXtTv1EghCpwAAkSZAAK-wFhJ2T36aECT_os7BA",
-    5: "CQACAgIAAxkBAAMJaiph0LfqqJfXbIVUfkmuBhO0am0AAlCZAAK-wFhJokbwzdwy7GU7BA",
-    6: "CQACAgIAAxkBAAMKaipiRp5OrMisQofUKOaf9TTuVAsAAleZAAK-wFhJL6jOOz1GgAM7BA",
-    7: "CQACAgIAAxkBAAMLaipiZHNQM5KDPmcbI69EFmLOB4MAAlmZAAK-wFhJ6BiCaQQ_JAY7BA",
+    0: "CQACAgIAAxkBAAMtaivFmYh_fIFsGFMezWmgRkpeqfcAApGjAAL3PFlJwIYOskcZXrU8BA",
+    1: "CQACAgIAAxkBAAMqaivFmaH-iuRPMJIwx4MyNn3zBLkAAo2jAAL3PFlJGEpDBNWw2ow8BA",
+    2: "CQACAgIAAxkBAAMvaivFmaVxoY7UhPrYL22OwYem6O0AApmjAAL3PFlJjCuuH0oNumg8BA",
+    3: "CQACAgIAAxkBAAMsaivFmcv6jylMlr5rPep_DV_8iyoAApCjAAL3PFlJzVNrPNgIYz08BA",
+    4: "CQACAgIAAxkBAAMxaivFmRw0HhdYgVzaNyiR6k2jXNEAAp6jAAL3PFlJuiP-Rfb6xbs8BA",
+    5: "CQACAgIAAxkBAAMwaivFmbBmswI6C2V34Rv9KBDsYQEAApujAAL3PFlJE513kMpSh808BA",
+    6: "CQACAgIAAxkBAAMuaivFmUciTFFFBDBSrQLyZDd6DrMAApWjAAL3PFlJK8hUVqleKys8BA",
+    7: "CQACAgIAAxkBAAMraivFmRxDuGBF6rh7-JO_ApuMyQIAAo-jAAL3PFlJ-dXUDizbJWQ8BA",
 }
 
 # ==================== ТЕКСТЫ ====================
 
-TEXT_NOT_SUBSCRIBED = (
-    "Чтобы получить доступ к аудиосерии, подпишись на канал автора 🎙️"
-)
+TEXT_NOT_SUBSCRIBED = "Чтобы получить доступ к аудиосерии, подпишись на канал автора 🎙️"
 
 TEXT_START_1 = (
     "Привет! 👋 Я Юля Минченко, нутрициолог с высшим образованием и сертифицированный коуч по питанию 🌿\n\n"
@@ -54,15 +52,15 @@ TEXT_START_3 = (
     "Начинаем с первой причины! ▶️"
 )
 
-TEXTS = {
+# Тексты ДО аудио
+TEXTS_BEFORE = {
     1: (
         "🏠 *День 1. Окружающая среда*\n\n"
         "Сегодня говорим про окружающую среду. Это всё, что находится вокруг нас и влияет на выбор еды: "
         "дом, работа, семья, родственники, гости, магазины, доставка, привычки близких людей.\n\n"
         "Питание зависит не только от знаний 💡 На него сильно влияет то, что лежит на виду, что удобно взять, "
         "что предлагают рядом и какой выбор доступен в течение дня.\n\n"
-        "В первом аудио говорим о том, почему лучше изменить то, что рядом, чем ограничить себя силой воли 💪\n\n"
-        "🎧 После аудио понаблюдайте, что в вашей окружающей среде помогает качественному питанию, а что уводит в сторону."
+        "В первом аудио говорим о том, почему лучше изменить то, что рядом, чем ограничить себя силой воли 💪"
     ),
     2: (
         "🍟 *День 2. Гипервкусная еда и маркетинг*\n\n"
@@ -72,8 +70,7 @@ TEXTS = {
         "что хочется продолжать ещё и ещё.\n\n"
         "Такая еда хорошо продаётся, красиво выглядит, быстродоступна и не требует усилий 🛒\n\n"
         "Во втором аудио говорим о том, почему желание съесть ещё не говорит о вашей слабости, "
-        "и почему дело не только в дисциплине 💡\n\n"
-        "🎧 После аудио понаблюдайте, на каких продуктах вам сложнее остановиться и в какой момент дня это происходит."
+        "и почему дело не только в дисциплине 💡"
     ),
     3: (
         "🖤🤍 *День 3. Чёрно-белое мышление*\n\n"
@@ -81,9 +78,7 @@ TEXTS = {
         "Съели сладкое — и дальше день будто уже зачёркнут: несите мне всё мороженое! 🍦 Сгорел сарай, гори и хата!\n\n"
         "Такой подход мешает питанию быть нормальной и естественной частью жизни. "
         "Еда превращается в постоянную оценку себя, а любое отклонение воспринимается как личный провал 😔\n\n"
-        "В третьем аудио говорим о том, почему так важно бороться с чёрно-белым мышлением в питании 💡\n\n"
-        "🎧 После аудио попробуйте заметить, в каких ситуациях у вас возникает мысль, "
-        "что раз не получилось идеально — можно уже не продолжать."
+        "В третьем аудио говорим о том, почему так важно бороться с чёрно-белым мышлением в питании 💡"
     ),
     4: (
         "🔍 *День 4. Самообман*\n\n"
@@ -93,8 +88,7 @@ TEXTS = {
         "что проблема только в сладком или что перееданий нет, а есть любовь к вкусной еде. "
         "Такие объяснения могут закрывать настоящую причину.\n\n"
         "В четвёртом аудио говорим о том, как увидеть разницу между тем, что мы думаем о своём питании, "
-        "и тем, что происходит на самом деле 💡\n\n"
-        "🎧 После аудио спросите себя, где вы можете не до конца видеть реальную картину своего питания."
+        "и тем, что происходит на самом деле 💡"
     ),
     5: (
         "📋 *День 5. Диетный опыт*\n\n"
@@ -102,9 +96,7 @@ TEXTS = {
         "запрещать продукты, терпеть, срываться и начинать заново — это влияет на отношения с едой 💔\n\n"
         "После такого опыта еда перестаёт быть обычной частью жизни. Тема веса и тела тесно связывается с виной, "
         "страхом, желанием всё контролировать. Возникает недоверие к себе и ощущение, что постоянно нужно брать себя в руки.\n\n"
-        "В пятом аудио говорим о том, как прошлые диеты могут мешать сейчас, даже если вы уже не сидите на диете 💡\n\n"
-        "🎧 После аудио подумайте, какие правила из прошлого до сих пор влияют на ваше питание.\n\n"
-        "Узнать подробнее про групповое сопровождение можно по ссылке 👇"
+        "В пятом аудио говорим о том, как прошлые диеты могут мешать сейчас, даже если вы уже не сидите на диете 💡"
     ),
     6: (
         "💭 *День 6. Вторичная выгода*\n\n"
@@ -113,9 +105,7 @@ TEXTS = {
         "справляться с тревогой, злостью, напряжением или одиночеством 🤍 Тогда ваше питание не меняется "
         "не из-за вашего нежелания измениться, а потому что еда закрывает какую-то потребность.\n\n"
         "В шестом аудио говорим о том, какую роль еда может играть в жизни и почему сначала важно понять "
-        "эту роль, а уже потом пытаться что-то менять 💡\n\n"
-        "🎧 После аудио подумайте, что вы получаете через еду, кроме вкуса и насыщения.\n\n"
-        "В сопровождении мы работаем не только с едой, но и с истинными причинами перееданий 🌿"
+        "эту роль, а уже потом пытаться что-то менять 💡"
     ),
     7: (
         "💛 *День 7. Эмоции*\n\n"
@@ -124,7 +114,25 @@ TEXTS = {
         "Еда является быстрым способом справиться с эмоциями 😔 Стресс, усталость, тревога, злость, скука, "
         "одиночество, напряжение, обида — всё это может вести нас к гипервкусной и калорийной еде, "
         "особенно если сложно понять, что именно я чувствую и что мне сейчас нужно.\n\n"
-        "В седьмом аудио говорим о том, какие эмоции чаще всего заедают и почему совет «просто перестать заедать» не помогает 💡\n\n"
+        "В седьмом аудио говорим о том, какие эмоции чаще всего заедают и почему совет «просто перестать заедать» не помогает 💡"
+    ),
+}
+
+# Тексты ПОСЛЕ аудио
+TEXTS_AFTER = {
+    1: "🎧 После аудио понаблюдайте, что в вашей окружающей среде помогает качественному питанию, а что уводит в сторону.",
+    2: "🎧 После аудио понаблюдайте, на каких продуктах вам сложнее остановиться и в какой момент дня это происходит.",
+    3: "🎧 После аудио попробуйте заметить, в каких ситуациях у вас возникает мысль, что раз не получилось идеально — можно уже не продолжать.",
+    4: "🎧 После аудио спросите себя, где вы можете не до конца видеть реальную картину своего питания.",
+    5: (
+        "🎧 После аудио подумайте, какие правила из прошлого до сих пор влияют на ваше питание.\n\n"
+        "Узнать подробнее про групповое сопровождение можно по ссылке 👇"
+    ),
+    6: (
+        "🎧 После аудио подумайте, что вы получаете через еду, кроме вкуса и насыщения.\n\n"
+        "В сопровождении мы работаем не только с едой, но и с истинными причинами перееданий 🌿"
+    ),
+    7: (
         "🎧 Если в этой серии вы узнали себя и готовы изменить ситуацию — приглашаю вас в групповое сопровождение!\n\n"
         "Существуют конкретные навыки в питании, которые помогают худеть без диет и навсегда 🌿 "
         "Вы сможете не только о них узнать, но и освоить — шаг за шагом. Результат не заставит себя долго ждать!\n\n"
@@ -133,19 +141,22 @@ TEXTS = {
     ),
 }
 
-TEXT_FINAL = (
+TEXT_FINAL_1 = (
     "Спасибо, что прошли эту аудиосерию 🙏\n\n"
     "Я хотела сделать её не про «правильное питание», а про то, почему это «правильное питание» не получается встроить в жизнь.\n\n"
-    "Помните 💡 Дело не в знаниях. Дело в усталости от попыток, старом опыте, окружающей среде, эмоциях, "
+    "Помните 💡\n\n"
+    "Дело не в знаниях. Дело в усталости от попыток, старом опыте, окружающей среде, эмоциях, "
     "запретах и привычных сценариях, которые копились вокруг еды годами.\n\n"
-    "Если после этих 7 аудио у вас появилось больше понимания, что именно происходит с вашим питанием — "
-    "значит серия была полезной и я справилась с задачей 🎉\n\n"
-    "Чтобы мы не потерялись, оставляю ссылки 👇\n\n"
+    "Чтобы мы не потерялись, оставляю ссылки 👇"
+)
+
+TEXT_FINAL_2 = (
     "Выберите одну мысль из этой серии — например, про работу с эмоциями — и наблюдайте за собой в ближайшие дни. "
     "Будьте любознательными, добрыми и честными с собой 🤍\n\n"
-    "До скорой встречи, ваша Юля! 👋\n\n"
-    "Напишите, пожалуйста, в этот бот, какая мысль из аудиосерии вам особенно понравилась 💬"
+    "До скорой встречи, ваша Юля! 👋"
 )
+
+TEXT_FINAL_3 = "Напишите, пожалуйста, в этот бот, какая мысль из аудиосерии вам особенно понравилась 💬"
 
 # ==================== КНОПКИ ====================
 
@@ -170,12 +181,17 @@ def kb_day7():
         [InlineKeyboardButton("📋 Лист ожидания", url="https://t.me/+jeRJ8g609qllZWQy")],
     ])
 
-def kb_final():
+def kb_final_1():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("💬 Telegram-канал", url="https://t.me/myanutrition")],
         [InlineKeyboardButton("🎙️ Подкаст", url="https://podcast.ru/1742928597")],
         [InlineKeyboardButton("🌿 Групповое сопровождение", url="https://myanutrition.ru/group")],
         [InlineKeyboardButton("📋 Лист ожидания", url="https://t.me/+jeRJ8g609qllZWQy")],
+    ])
+
+def kb_final_3():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("✍️ Написать", url="https://t.me/MyaNutrition_Bot")],
     ])
 
 # ==================== БАЗА ДАННЫХ ====================
@@ -239,8 +255,7 @@ async def is_subscribed(bot, user_id):
 # ==================== ОТПРАВКА КОНТЕНТА ====================
 
 async def send_welcome_and_day0_day1(bot, user_id):
-    """Отправляет приветствие + аудио День 0 + День 1 сразу при старте"""
-    # Приветствие часть 1
+    # Сообщение 1
     await bot.send_message(user_id, TEXT_START_1)
     await asyncio.sleep(1)
 
@@ -248,7 +263,7 @@ async def send_welcome_and_day0_day1(bot, user_id):
     await bot.send_video_note(user_id, VIDEO_NOTE_WELCOME)
     await asyncio.sleep(1)
 
-    # Приветствие часть 2
+    # Сообщение 2
     await bot.send_message(user_id, TEXT_START_2)
     await asyncio.sleep(1)
 
@@ -256,21 +271,35 @@ async def send_welcome_and_day0_day1(bot, user_id):
     await bot.send_audio(user_id, AUDIOS[0])
     await asyncio.sleep(1)
 
-    # Приветствие часть 3
+    # Сообщение 3
     await bot.send_message(user_id, TEXT_START_3)
     await asyncio.sleep(1)
 
-    # День 1
-    await bot.send_message(user_id, TEXTS[1], parse_mode="Markdown")
+    # День 1 — текст до аудио
+    await bot.send_message(user_id, TEXTS_BEFORE[1], parse_mode="Markdown")
     await asyncio.sleep(1)
+
+    # День 1 — аудио
     await bot.send_audio(user_id, AUDIOS[1])
+    await asyncio.sleep(1)
+
+    # День 1 — текст после аудио
+    await bot.send_message(user_id, TEXTS_AFTER[1])
 
 
 async def send_day(bot, user_id, day):
-    """Отправляет один день (2–7) + финал после дня 7"""
     if day > 7:
         return
 
+    # Текст до аудио
+    await bot.send_message(user_id, TEXTS_BEFORE[day], parse_mode="Markdown")
+    await asyncio.sleep(1)
+
+    # Аудио
+    await bot.send_audio(user_id, AUDIOS[day])
+    await asyncio.sleep(1)
+
+    # Текст после аудио + кнопки
     keyboard = None
     if day == 5:
         keyboard = kb_day5()
@@ -279,31 +308,30 @@ async def send_day(bot, user_id, day):
     elif day == 7:
         keyboard = kb_day7()
 
-    await bot.send_message(user_id, TEXTS[day], parse_mode="Markdown", reply_markup=keyboard)
-    await asyncio.sleep(1)
-    await bot.send_audio(user_id, AUDIOS[day])
+    await bot.send_message(user_id, TEXTS_AFTER[day], reply_markup=keyboard)
 
+    # После дня 7 — финал
     if day == 7:
         await asyncio.sleep(1)
         await bot.send_video_note(user_id, VIDEO_NOTE_FINAL)
         await asyncio.sleep(1)
-        await bot.send_message(user_id, TEXT_FINAL, reply_markup=kb_final())
+        await bot.send_message(user_id, TEXT_FINAL_1, reply_markup=kb_final_1())
+        await asyncio.sleep(1)
+        await bot.send_message(user_id, TEXT_FINAL_2)
+        await asyncio.sleep(1)
+        await bot.send_message(user_id, TEXT_FINAL_3, reply_markup=kb_final_3())
 
     update_last_day(user_id, day)
 
 # ==================== ЕЖЕДНЕВНАЯ ЗАДАЧА ====================
 
-async def daily_job(context: ContextTypes.DEFAULT_TYPE):
-    """Запускается каждый день в 10:00 — отправляет следующий день всем пользователям"""
+async def daily_job(context):
     users = get_all_users()
     today = datetime.now().date()
 
     for user_id, start_date_str, last_day in users:
         start_date = datetime.fromisoformat(start_date_str).date()
         days_passed = (today - start_date).days
-
-        # last_day=1 значит День 1 уже отправлен при старте
-        # Следующий день для отправки = last_day + 1
         next_day = last_day + 1
 
         if next_day <= 7 and days_passed >= next_day:
@@ -353,7 +381,6 @@ async def check_subscription(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 async def test_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Тестовый режим — отправляет все дни подряд с паузой 2 сек"""
     user_id = update.effective_user.id
     await update.message.reply_text("🧪 Запускаю тестовый режим — отправляю все сообщения подряд...")
 
@@ -373,12 +400,10 @@ def main():
 
     app = Application.builder().token(BOT_TOKEN).build()
 
-    # Хэндлеры
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("test", test_mode))
     app.add_handler(CallbackQueryHandler(check_subscription, pattern="check_sub"))
 
-    # Ежедневная задача в 10:00
     job_queue = app.job_queue
     now = datetime.now()
     target_time = now.replace(hour=SEND_HOUR, minute=SEND_MINUTE, second=0, microsecond=0)
