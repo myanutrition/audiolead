@@ -12,7 +12,7 @@ from telegram.ext import (
 # ==================== НАСТРОЙКИ ====================
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHANNEL_USERNAME = "@myanutrition"
-SEND_HOUR = 10
+SEND_HOUR = 7
 SEND_MINUTE = 0
 
 # ==================== FILE IDs ====================
