@@ -14,6 +14,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHANNEL_USERNAME = "@myanutrition"
 SEND_HOUR = 7
 SEND_MINUTE = 0
+ADMIN_CHAT_ID = 7917196527  # твой личный chat_id для уведомлений
 
 # ==================== FILE IDs ====================
 VIDEO_NOTE_WELCOME = "DQACAgIAAxkBAAMmaivD3RNQAAGqPsePgjt-3pvjfu8kAAJRlQACsWNgSaHwSjhTtWBXPAQ"
@@ -52,7 +53,6 @@ TEXT_START_3 = (
     "Начинаем с первой причины! ▶️"
 )
 
-# Тексты ДО аудио
 TEXTS_BEFORE = {
     1: (
         "🏠 *День 1. Окружающая среда*\n\n"
@@ -118,7 +118,6 @@ TEXTS_BEFORE = {
     ),
 }
 
-# Тексты ПОСЛЕ аудио
 TEXTS_AFTER = {
     1: "🎧 После аудио понаблюдайте, что в вашей окружающей среде помогает качественному питанию, а что уводит в сторону.",
     2: "🎧 После аудио понаблюдайте, на каких продуктах вам сложнее остановиться и в какой момент дня это происходит.",
@@ -166,33 +165,66 @@ def kb_subscribe():
         [InlineKeyboardButton("✅ Я подписался(ась)", callback_data="check_sub")],
     ])
 
+def kb_interesting():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("Интересно! 🌟", callback_data="btn_interesting")],
+    ])
+
+def kb_lets_go():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("Отлично, давай начнём! ▶️", callback_data="btn_lets_go")],
+    ])
+
 def kb_day5():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("Подробнее о группе", url="https://myanutrition.ru/group")],
+        [InlineKeyboardButton("Подробнее о группе", callback_data="btn_group_d5")],
     ])
 
 def kb_day6():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("📋 Лист ожидания", url="https://t.me/+jeRJ8g609qllZWQy")],
+        [InlineKeyboardButton("📋 Лист ожидания", callback_data="btn_waitlist_d6")],
     ])
 
 def kb_day7():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("📋 Лист ожидания", url="https://t.me/+jeRJ8g609qllZWQy")],
+        [InlineKeyboardButton("📋 Лист ожидания", callback_data="btn_waitlist_d7")],
     ])
 
 def kb_final_1():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("💬 Telegram-канал", url="https://t.me/myanutrition")],
-        [InlineKeyboardButton("🎙️ Подкаст", url="https://podcast.ru/1742928597")],
-        [InlineKeyboardButton("🌿 Групповое сопровождение", url="https://myanutrition.ru/group")],
-        [InlineKeyboardButton("📋 Лист ожидания", url="https://t.me/+jeRJ8g609qllZWQy")],
+        [InlineKeyboardButton("💬 Telegram-канал", callback_data="btn_channel_final")],
+        [InlineKeyboardButton("🎙️ Подкаст", callback_data="btn_podcast_final")],
+        [InlineKeyboardButton("🌿 Групповое сопровождение", callback_data="btn_group_final")],
+        [InlineKeyboardButton("📋 Лист ожидания", callback_data="btn_waitlist_final")],
     ])
 
 def kb_final_3():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("✍️ Написать", url="https://t.me/MyaNutrition_Bot")],
+        [InlineKeyboardButton("✍️ Написать", callback_data="btn_feedback")],
     ])
+
+# URL для кнопок
+BUTTON_URLS = {
+    "btn_group_d5": "https://myanutrition.ru/group",
+    "btn_waitlist_d6": "https://t.me/+jeRJ8g609qllZWQy",
+    "btn_waitlist_d7": "https://t.me/+jeRJ8g609qllZWQy",
+    "btn_channel_final": "https://t.me/myanutrition",
+    "btn_podcast_final": "https://podcast.ru/1742928597",
+    "btn_group_final": "https://myanutrition.ru/group",
+    "btn_waitlist_final": "https://t.me/+jeRJ8g609qllZWQy",
+    "btn_feedback": "https://t.me/MyaNutrition_Bot",
+}
+
+BUTTON_NAMES = {
+    "btn_group_d5": "Подробнее о группе (День 5)",
+    "btn_waitlist_d6": "Лист ожидания (День 6)",
+    "btn_waitlist_d7": "Лист ожидания (День 7)",
+    "btn_channel_final": "Telegram-канал (Финал)",
+    "btn_podcast_final": "Подкаст (Финал)",
+    "btn_group_final": "Групповое сопровождение (Финал)",
+    "btn_waitlist_final": "Лист ожидания (Финал)",
+    "btn_feedback": "Написать в бот (Финал)",
+}
 
 # ==================== БАЗА ДАННЫХ ====================
 
@@ -203,7 +235,25 @@ def init_db():
         CREATE TABLE IF NOT EXISTS users (
             user_id INTEGER PRIMARY KEY,
             start_date TEXT,
-            last_day INTEGER DEFAULT 1
+            last_day INTEGER DEFAULT 1,
+            blocked INTEGER DEFAULT 0,
+            subscribed INTEGER DEFAULT 0
+        )
+    """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS stats (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event TEXT,
+            user_id INTEGER,
+            created_at TEXT
+        )
+    """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS button_clicks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            button TEXT,
+            user_id INTEGER,
+            created_at TEXT
         )
     """)
     conn.commit()
@@ -214,16 +264,47 @@ def add_user(user_id):
     c = conn.cursor()
     today = datetime.now().date().isoformat()
     c.execute(
-        "INSERT OR IGNORE INTO users (user_id, start_date, last_day) VALUES (?, ?, ?)",
-        (user_id, today, 1)
+        "INSERT OR IGNORE INTO users (user_id, start_date, last_day, subscribed) VALUES (?, ?, ?, ?)",
+        (user_id, today, 1, 1)
     )
+    c.execute(
+        "INSERT INTO stats (event, user_id, created_at) VALUES (?, ?, ?)",
+        ("new_user", user_id, datetime.now().isoformat())
+    )
+    conn.commit()
+    conn.close()
+
+def log_event(event, user_id):
+    conn = sqlite3.connect("users.db")
+    c = conn.cursor()
+    c.execute(
+        "INSERT INTO stats (event, user_id, created_at) VALUES (?, ?, ?)",
+        (event, user_id, datetime.now().isoformat())
+    )
+    conn.commit()
+    conn.close()
+
+def log_button_click(button, user_id):
+    conn = sqlite3.connect("users.db")
+    c = conn.cursor()
+    c.execute(
+        "INSERT INTO button_clicks (button, user_id, created_at) VALUES (?, ?, ?)",
+        (button, user_id, datetime.now().isoformat())
+    )
+    conn.commit()
+    conn.close()
+
+def mark_blocked(user_id):
+    conn = sqlite3.connect("users.db")
+    c = conn.cursor()
+    c.execute("UPDATE users SET blocked = 1 WHERE user_id = ?", (user_id,))
     conn.commit()
     conn.close()
 
 def get_all_users():
     conn = sqlite3.connect("users.db")
     c = conn.cursor()
-    c.execute("SELECT user_id, start_date, last_day FROM users")
+    c.execute("SELECT user_id, start_date, last_day FROM users WHERE blocked = 0")
     rows = c.fetchall()
     conn.close()
     return rows
@@ -243,6 +324,52 @@ def user_exists(user_id):
     conn.close()
     return result is not None
 
+def get_stats():
+    conn = sqlite3.connect("users.db")
+    c = conn.cursor()
+
+    # Всего пользователей
+    c.execute("SELECT COUNT(*) FROM users")
+    total = c.fetchone()[0]
+
+    # Заблокировали бота
+    c.execute("SELECT COUNT(*) FROM users WHERE blocked = 1")
+    blocked = c.fetchone()[0]
+
+    # Не подписались и ушли
+    c.execute("SELECT COUNT(*) FROM stats WHERE event = 'not_subscribed'")
+    not_subscribed = c.fetchone()[0]
+
+    # Новые за неделю
+    week_ago = (datetime.now() - timedelta(days=7)).isoformat()
+    c.execute("SELECT COUNT(*) FROM stats WHERE event = 'new_user' AND created_at >= ?", (week_ago,))
+    new_week = c.fetchone()[0]
+
+    # По дням
+    days_stats = {}
+    for day in range(1, 8):
+        c.execute("SELECT COUNT(*) FROM users WHERE last_day = ? AND blocked = 0", (day,))
+        days_stats[day] = c.fetchone()[0]
+
+    # Завершили (дошли до дня 7)
+    c.execute("SELECT COUNT(*) FROM users WHERE last_day = 7 AND blocked = 0")
+    completed = c.fetchone()[0]
+
+    # Клики по кнопкам
+    c.execute("SELECT button, COUNT(*) FROM button_clicks GROUP BY button")
+    clicks = dict(c.fetchall())
+
+    conn.close()
+    return {
+        "total": total,
+        "blocked": blocked,
+        "not_subscribed": not_subscribed,
+        "new_week": new_week,
+        "days": days_stats,
+        "completed": completed,
+        "clicks": clicks,
+    }
+
 # ==================== ПРОВЕРКА ПОДПИСКИ ====================
 
 async def is_subscribed(bot, user_id):
@@ -252,54 +379,71 @@ async def is_subscribed(bot, user_id):
     except Exception:
         return False
 
+# ==================== УВЕДОМЛЕНИЯ АДМИНУ ====================
+
+async def notify_admin(bot, text):
+    try:
+        await bot.send_message(ADMIN_CHAT_ID, text)
+    except Exception as e:
+        logging.error(f"Ошибка уведомления админа: {e}")
+
 # ==================== ОТПРАВКА КОНТЕНТА ====================
 
-async def send_welcome_and_day0_day1(bot, user_id):
+async def safe_send(bot, user_id, func, *args, **kwargs):
+    try:
+        return await func(user_id, *args, **kwargs)
+    except Exception as e:
+        if "blocked" in str(e).lower() or "deactivated" in str(e).lower():
+            mark_blocked(user_id)
+        else:
+            logging.error(f"Ошибка отправки пользователю {user_id}: {e}")
+        return None
+
+async def send_welcome(bot, user_id):
     # Сообщение 1
-    await bot.send_message(user_id, TEXT_START_1)
+    await safe_send(bot, user_id, bot.send_message, TEXT_START_1)
     await asyncio.sleep(1)
 
     # Приветственный кружок
-    await bot.send_video_note(user_id, VIDEO_NOTE_WELCOME)
+    await safe_send(bot, user_id, bot.send_video_note, VIDEO_NOTE_WELCOME)
     await asyncio.sleep(1)
 
-    # Сообщение 2
-    await bot.send_message(user_id, TEXT_START_2)
-    await asyncio.sleep(1)
+    # Сообщение 2 + кнопка "Интересно!"
+    await safe_send(bot, user_id, bot.send_message, TEXT_START_2, reply_markup=kb_interesting())
 
+
+async def send_day0_and_day1_start(bot, user_id):
     # Аудио День 0
-    await bot.send_audio(user_id, AUDIOS[0])
+    await safe_send(bot, user_id, bot.send_audio, AUDIOS[0])
     await asyncio.sleep(1)
 
-    # Сообщение 3
-    await bot.send_message(user_id, TEXT_START_3)
+    # Сообщение 3 + кнопка "Отлично, давай начнём!"
+    await safe_send(bot, user_id, bot.send_message, TEXT_START_3, reply_markup=kb_lets_go())
+
+
+async def send_day1(bot, user_id):
+    # День 1 текст до аудио
+    await safe_send(bot, user_id, bot.send_message, TEXTS_BEFORE[1], parse_mode="Markdown")
     await asyncio.sleep(1)
 
-    # День 1 — текст до аудио
-    await bot.send_message(user_id, TEXTS_BEFORE[1], parse_mode="Markdown")
+    # Аудио День 1
+    await safe_send(bot, user_id, bot.send_audio, AUDIOS[1])
     await asyncio.sleep(1)
 
-    # День 1 — аудио
-    await bot.send_audio(user_id, AUDIOS[1])
-    await asyncio.sleep(1)
-
-    # День 1 — текст после аудио
-    await bot.send_message(user_id, TEXTS_AFTER[1])
+    # Текст после аудио
+    await safe_send(bot, user_id, bot.send_message, TEXTS_AFTER[1])
 
 
 async def send_day(bot, user_id, day):
     if day > 7:
         return
 
-    # Текст до аудио
-    await bot.send_message(user_id, TEXTS_BEFORE[day], parse_mode="Markdown")
+    await safe_send(bot, user_id, bot.send_message, TEXTS_BEFORE[day], parse_mode="Markdown")
     await asyncio.sleep(1)
 
-    # Аудио
-    await bot.send_audio(user_id, AUDIOS[day])
+    await safe_send(bot, user_id, bot.send_audio, AUDIOS[day])
     await asyncio.sleep(1)
 
-    # Текст после аудио + кнопки
     keyboard = None
     if day == 5:
         keyboard = kb_day5()
@@ -308,18 +452,17 @@ async def send_day(bot, user_id, day):
     elif day == 7:
         keyboard = kb_day7()
 
-    await bot.send_message(user_id, TEXTS_AFTER[day], reply_markup=keyboard)
+    await safe_send(bot, user_id, bot.send_message, TEXTS_AFTER[day], reply_markup=keyboard)
 
-    # После дня 7 — финал
     if day == 7:
         await asyncio.sleep(1)
-        await bot.send_video_note(user_id, VIDEO_NOTE_FINAL)
+        await safe_send(bot, user_id, bot.send_video_note, VIDEO_NOTE_FINAL)
         await asyncio.sleep(1)
-        await bot.send_message(user_id, TEXT_FINAL_1, reply_markup=kb_final_1())
+        await safe_send(bot, user_id, bot.send_message, TEXT_FINAL_1, reply_markup=kb_final_1())
         await asyncio.sleep(1)
-        await bot.send_message(user_id, TEXT_FINAL_2)
+        await safe_send(bot, user_id, bot.send_message, TEXT_FINAL_2)
         await asyncio.sleep(1)
-        await bot.send_message(user_id, TEXT_FINAL_3, reply_markup=kb_final_3())
+        await safe_send(bot, user_id, bot.send_message, TEXT_FINAL_3, reply_markup=kb_final_3())
 
     update_last_day(user_id, day)
 
@@ -351,40 +494,109 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     subscribed = await is_subscribed(context.bot, user_id)
     if not subscribed:
+        log_event("not_subscribed", user_id)
         await update.message.reply_text(TEXT_NOT_SUBSCRIBED, reply_markup=kb_subscribe())
         return
 
     add_user(user_id)
-    await send_welcome_and_day0_day1(context.bot, user_id)
+    username = update.effective_user.username or update.effective_user.first_name
+    await notify_admin(context.bot, f"🆕 Новый пользователь: @{username} (ID: {user_id})")
+    await send_welcome(context.bot, user_id)
 
 
-async def check_subscription(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     user_id = query.from_user.id
+    data = query.data
 
-    subscribed = await is_subscribed(context.bot, user_id)
-    if not subscribed:
+    # Проверка подписки
+    if data == "check_sub":
+        subscribed = await is_subscribed(context.bot, user_id)
+        if not subscribed:
+            await query.message.reply_text(
+                "Похоже, вы ещё не подписались 🙈 Подпишитесь на канал и нажмите кнопку снова!",
+                reply_markup=kb_subscribe()
+            )
+            return
+        if user_exists(user_id):
+            await query.message.reply_text("Вы уже зарегистрированы! Ожидайте следующее аудио 🎧")
+            return
+        add_user(user_id)
+        username = query.from_user.username or query.from_user.first_name
+        await notify_admin(context.bot, f"🆕 Новый пользователь: @{username} (ID: {user_id})")
+        await query.message.reply_text("Отлично, подписка подтверждена! 🎉 Начинаем!")
+        await send_welcome(context.bot, user_id)
+        return
+
+    # Кнопка "Интересно!"
+    if data == "btn_interesting":
+        log_button_click("btn_interesting", user_id)
+        await send_day0_and_day1_start(context.bot, user_id)
+        return
+
+    # Кнопка "Отлично, давай начнём!"
+    if data == "btn_lets_go":
+        log_button_click("btn_lets_go", user_id)
+        await send_day1(context.bot, user_id)
+        return
+
+    # Кнопки со ссылками — логируем клик и открываем ссылку
+    if data in BUTTON_URLS:
+        log_button_click(data, user_id)
+        url = BUTTON_URLS[data]
+        name = BUTTON_NAMES[data]
         await query.message.reply_text(
-            "Похоже, вы ещё не подписались 🙈 Подпишитесь на канал и нажмите кнопку снова!",
-            reply_markup=kb_subscribe()
+            f"Открываю ссылку 👇",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(name, url=url)]])
         )
         return
 
-    if user_exists(user_id):
-        await query.message.reply_text("Вы уже зарегистрированы! Ожидайте следующее аудио 🎧")
+
+async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_CHAT_ID:
         return
 
-    add_user(user_id)
-    await query.message.reply_text("Отлично, подписка подтверждена! 🎉 Начинаем!")
-    await send_welcome_and_day0_day1(context.bot, user_id)
+    s = get_stats()
+
+    days_text = ""
+    for day, count in s["days"].items():
+        days_text += f"  День {day}: {count} чел.\n"
+
+    clicks_text = ""
+    for btn, count in s["clicks"].items():
+        name = BUTTON_NAMES.get(btn, btn)
+        clicks_text += f"  {name}: {count}\n"
+
+    if not clicks_text:
+        clicks_text = "  Пока нет кликов\n"
+
+    text = (
+        f"📊 *Статистика бота*\n\n"
+        f"👥 Всего пользователей: {s['total']}\n"
+        f"🆕 Новых за неделю: {s['new_week']}\n"
+        f"🚫 Заблокировали бота: {s['blocked']}\n"
+        f"❌ Не подписались и ушли: {s['not_subscribed']}\n"
+        f"✅ Завершили серию (День 7): {s['completed']}\n\n"
+        f"📅 *По дням:*\n{days_text}\n"
+        f"🔘 *Клики по кнопкам:*\n{clicks_text}"
+    )
+
+    await update.message.reply_text(text, parse_mode="Markdown")
 
 
 async def test_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    await update.message.reply_text("🧪 Запускаю тестовый режим — отправляю все сообщения подряд...")
+    if update.effective_user.id != ADMIN_CHAT_ID:
+        return
 
-    await send_welcome_and_day0_day1(context.bot, user_id)
+    user_id = update.effective_user.id
+    await update.message.reply_text("🧪 Запускаю тестовый режим...")
+
+    await send_welcome(context.bot, user_id)
+    await asyncio.sleep(2)
+    await send_day0_and_day1_start(context.bot, user_id)
+    await asyncio.sleep(2)
+    await send_day1(context.bot, user_id)
 
     for day in range(2, 8):
         await asyncio.sleep(2)
@@ -402,7 +614,8 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("test", test_mode))
-    app.add_handler(CallbackQueryHandler(check_subscription, pattern="check_sub"))
+    app.add_handler(CommandHandler("stats", stats_command))
+    app.add_handler(CallbackQueryHandler(button_handler))
 
     job_queue = app.job_queue
     now = datetime.now()
