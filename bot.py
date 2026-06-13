@@ -216,14 +216,14 @@ BUTTON_URLS = {
 }
 
 BUTTON_NAMES = {
-    "btn_group_d5": "Подробнее о группе (День 5)",
-    "btn_waitlist_d6": "Лист ожидания (День 6)",
-    "btn_waitlist_d7": "Лист ожидания (День 7)",
-    "btn_channel_final": "Telegram-канал (Финал)",
-    "btn_podcast_final": "Подкаст (Финал)",
-    "btn_group_final": "Групповое сопровождение (Финал)",
-    "btn_waitlist_final": "Лист ожидания (Финал)",
-    "btn_feedback": "Написать в бот (Финал)",
+    "btn_group_d5": "Подробнее о группе",
+    "btn_waitlist_d6": "📋 Лист ожидания",
+    "btn_waitlist_d7": "📋 Лист ожидания",
+    "btn_channel_final": "💬 Telegram-канал",
+    "btn_podcast_final": "🎙️ Подкаст",
+    "btn_group_final": "🌿 Групповое сопровождение",
+    "btn_waitlist_final": "📋 Лист ожидания",
+    "btn_feedback": "✍️ Написать",
 }
 
 # ==================== БАЗА ДАННЫХ ====================
@@ -260,16 +260,28 @@ def init_db():
     conn.close()
 
 def add_user(user_id):
+    """Регистрирует пользователя. start_date пока NULL — курс ещё не начался."""
     conn = sqlite3.connect("users.db")
     c = conn.cursor()
-    today = datetime.now().date().isoformat()
     c.execute(
         "INSERT OR IGNORE INTO users (user_id, start_date, last_day, subscribed) VALUES (?, ?, ?, ?)",
-        (user_id, today, 1, 1)
+        (user_id, None, 0, 1)
     )
     c.execute(
         "INSERT INTO stats (event, user_id, created_at) VALUES (?, ?, ?)",
         ("new_user", user_id, datetime.now().isoformat())
+    )
+    conn.commit()
+    conn.close()
+
+def set_course_started(user_id):
+    """Записывает start_date и last_day=1 когда пользователь нажал 'Давай начнём!'"""
+    conn = sqlite3.connect("users.db")
+    c = conn.cursor()
+    today = datetime.now().date().isoformat()
+    c.execute(
+        "UPDATE users SET start_date = ?, last_day = 1 WHERE user_id = ?",
+        (today, user_id)
     )
     conn.commit()
     conn.close()
@@ -302,9 +314,10 @@ def mark_blocked(user_id):
     conn.close()
 
 def get_all_users():
+    """Возвращает только тех кто уже нажал 'Давай начнём!' (start_date не NULL)"""
     conn = sqlite3.connect("users.db")
     c = conn.cursor()
-    c.execute("SELECT user_id, start_date, last_day FROM users WHERE blocked = 0")
+    c.execute("SELECT user_id, start_date, last_day FROM users WHERE blocked = 0 AND start_date IS NOT NULL")
     rows = c.fetchall()
     conn.close()
     return rows
@@ -473,11 +486,15 @@ async def daily_job(context):
     today = datetime.now().date()
 
     for user_id, start_date_str, last_day in users:
+        if not start_date_str:
+            continue
         start_date = datetime.fromisoformat(start_date_str).date()
         days_passed = (today - start_date).days
         next_day = last_day + 1
 
-        if next_day <= 7 and days_passed >= (next_day - 1):
+        # Отправляем следующий день если прошло ровно столько дней сколько нужно
+        # last_day=1 → next_day=2 → нужно days_passed=1 (на следующий день после старта)
+        if next_day <= 7 and days_passed == (next_day - 1):
             try:
                 await send_day(context.bot, user_id, next_day)
             except Exception as e:
@@ -538,6 +555,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Кнопка "Отлично, давай начнём!"
     if data == "btn_lets_go":
         log_button_click("btn_lets_go", user_id)
+        set_course_started(user_id)
         await send_day1(context.bot, user_id)
         return
 
@@ -547,7 +565,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         url = BUTTON_URLS[data]
         name = BUTTON_NAMES[data]
         await query.message.reply_text(
-            f"Открываю ссылку 👇",
+            "Переходи по ссылке 👇",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(name, url=url)]])
         )
         return
