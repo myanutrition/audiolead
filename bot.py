@@ -477,7 +477,7 @@ async def daily_job(context):
         days_passed = (today - start_date).days
         next_day = last_day + 1
 
-        if next_day <= 7 and days_passed >= next_day:
+        if next_day <= 7 and days_passed >= (next_day - 1):
             try:
                 await send_day(context.bot, user_id, next_day)
             except Exception as e:
@@ -585,6 +585,14 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text)
 
 
+async def runnow_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_CHAT_ID:
+        return
+    await update.message.reply_text("🚀 Запускаю рассылку прямо сейчас...")
+    await daily_job(context)
+    await update.message.reply_text("✅ Рассылка завершена!")
+
+
 async def test_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_CHAT_ID:
         return
@@ -615,6 +623,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("test", test_mode))
     app.add_handler(CommandHandler("stats", stats_command))
+    app.add_handler(CommandHandler("runnow", runnow_command))
     app.add_handler(CallbackQueryHandler(button_handler))
 
     job_queue = app.job_queue
