@@ -403,14 +403,19 @@ async def notify_admin(bot, text):
 # ==================== ОТПРАВКА КОНТЕНТА ====================
 
 async def safe_send(bot, user_id, func, *args, **kwargs):
-    try:
-        return await func(user_id, *args, **kwargs)
-    except Exception as e:
-        if "blocked" in str(e).lower() or "deactivated" in str(e).lower():
-            mark_blocked(user_id)
-        else:
-            logging.error(f"Ошибка отправки пользователю {user_id}: {e}")
-        return None
+    for attempt in range(3):
+        try:
+            return await func(user_id, *args, **kwargs)
+        except Exception as e:
+            if "blocked" in str(e).lower() or "deactivated" in str(e).lower():
+                mark_blocked(user_id)
+                return None
+            if attempt < 2:
+                logging.warning(f"Попытка {attempt+1} не удалась для {user_id}: {e}. Повтор через 5 сек...")
+                await asyncio.sleep(5)
+            else:
+                logging.error(f"Все 3 попытки не удались для {user_id}: {e}")
+    return None
 
 async def send_welcome(bot, user_id):
     # Сообщение 1
@@ -481,24 +486,23 @@ async def send_day(bot, user_id, day):
 
 # ==================== ЕЖЕДНЕВНАЯ ЗАДАЧА ====================
 
-async def daily_job(context):
+async def daily_job(context: ContextTypes.DEFAULT_TYPE):
     users = get_all_users()
     today = datetime.now().date()
 
     for user_id, start_date_str, last_day in users:
         if not start_date_str:
             continue
-        start_date = datetime.fromisoformat(start_date_str).date()
-        days_passed = (today - start_date).days
-        next_day = last_day + 1
+        try:
+            start_date = datetime.fromisoformat(start_date_str).date()
+            days_passed = (today - start_date).days
+            next_day = last_day + 1
 
-        # Отправляем следующий день если прошло ровно столько дней сколько нужно
-        # last_day=1 → next_day=2 → нужно days_passed=1 (на следующий день после старта)
-        if next_day <= 7 and days_passed == (next_day - 1):
-            try:
+            if next_day <= 7 and days_passed == (next_day - 1):
                 await send_day(context.bot, user_id, next_day)
-            except Exception as e:
-                logging.error(f"Ошибка отправки дня {next_day} пользователю {user_id}: {e}")
+                await asyncio.sleep(2)
+        except Exception as e:
+            logging.error(f"Ошибка в daily_job для пользователя {user_id}: {e}")
 
 # ==================== ХЭНДЛЕРЫ ====================
 
@@ -603,6 +607,25 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text)
 
 
+async def fixdb_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_CHAT_ID:
+        return
+    conn = sqlite3.connect("users.db")
+    c = conn.cursor()
+    today = datetime.now().date().isoformat()
+    # Исправляем все записи где start_date не похожа на правильную дату
+    c.execute("SELECT user_id, start_date FROM users")
+    rows = c.fetchall()
+    fixed = 0
+    for user_id, start_date in rows:
+        if start_date and (len(str(start_date)) != 10 or not str(start_date).startswith('20')):
+            c.execute("UPDATE users SET start_date = ? WHERE user_id = ?", (today, user_id))
+            fixed += 1
+    conn.commit()
+    conn.close()
+    await update.message.reply_text(f"✅ Исправлено записей: {fixed}\nУстановлена дата: {today}")
+
+
 async def runnow_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_CHAT_ID:
         return
@@ -642,6 +665,7 @@ def main():
     app.add_handler(CommandHandler("test", test_mode))
     app.add_handler(CommandHandler("stats", stats_command))
     app.add_handler(CommandHandler("runnow", runnow_command))
+    app.add_handler(CommandHandler("fixdb", fixdb_command))
     app.add_handler(CallbackQueryHandler(button_handler))
 
     job_queue = app.job_queue
@@ -650,7 +674,6 @@ def main():
     if now >= target_time:
         target_time += timedelta(days=1)
     delay = (target_time - now).total_seconds()
-
     job_queue.run_repeating(daily_job, interval=86400, first=delay)
 
     print("Бот запущен! ✅")
