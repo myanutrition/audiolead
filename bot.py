@@ -19,6 +19,7 @@ ADMIN_CHAT_ID = 7917196527  # твой личный chat_id для уведом�
 # ==================== FILE IDs ====================
 VIDEO_NOTE_WELCOME = "DQACAgIAAxkBAAMmaivD3RNQAAGqPsePgjt-3pvjfu8kAAJRlQACsWNgSaHwSjhTtWBXPAQ"
 VIDEO_NOTE_FINAL = "DQACAgIAAxkDAAMjaiu4TIfoRkGRS7rqDomugaOruV8AAnuUAAKxY2BJx2IupzoJWSE8BA"
+PHOTO_DAY9 = "AgACAgIAAxkBAAINKGo66DdkVNMAacFvAYACiHBzoJXk6gACOyBrG6ac2ElCweKxRRTS4gEAAwIAA3gAazwE"
 
 AUDIOS = {
     0: "CQACAgIAAxkBAAMtaivFmYh_fIFsGFMezWmgRkpeqfcAApGjAAL3PFlJwIYOskcZXrU8BA",
@@ -157,6 +158,32 @@ TEXT_FINAL_2 = (
 
 TEXT_FINAL_3 = "Напишите, пожалуйста, в этот бот, какая мысль из аудиосерии вам особенно понравилась 💬"
 
+TEXT_DAY8 = (
+    "📚 Бонус. Материалы для углубления\n\n"
+    "Вы прошли все 7 аудио — это здорово!\n\n"
+    "Хочу поделиться несколькими постами из моего канала, которые хорошо дополняют то, о чём мы говорили в серии. Почитайте в удобное время 👇\n\n"
+    "• <a href=\"https://t.me/myanutrition/2052\">Что влияет на нас, когда мы переедаем</a>\n"
+    "• <a href=\"https://t.me/myanutrition/2087\">У меня плохая генетика, поэтому я набираю вес</a>\n"
+    "• <a href=\"https://t.me/myanutrition/2118\">СРЫВ — не используйте это слово</a>\n"
+    "• <a href=\"https://t.me/myanutrition/2106\">Откаты в питании — это нормально?! Диетная карусель</a>"
+)
+
+TEXT_DAY9 = (
+    "Пока мой голос звучал в твоих наушниках, ты могла заметить важную вещь. Сложные отношения с едой — не от незнания и не потому, что ты слабовольная 🤍\n\n"
+    "Скорее всего, ты и так прекрасно понимаешь, что надо есть регулярнее, добавлять белок, овощи, не доводить себя до дикого голода, не жить на кофе, кусочничестве и сладком до вечера.\n\n"
+    "Но потом день идёт не по плану. Обед опять где-то между делами, сил к вечеру нет, сладкое становится самым быстрым способом себя поддержать, а потом думаешь: <i>«ну всё, завтра нормально начну»</i> 😔\n\n"
+    "Так можно <b>годами</b> читать полезные материалы, сохранять рецепты, проходить тесты, слушать подкасты, понимать причины перееданий — и всё равно чувствовать, что тема еды занимает слишком много места в голове.\n\n"
+    "Я очень хорошо понимаю, как это <b>выматывает</b> 💛\n\n"
+    "В групповом сопровождении мы будем работать не только с продуктами, которые ты ешь. В первую очередь мы разберёмся с тем, что стоит за этим: пропусками еды, усталостью, эмоциональным голодом, перекусами на бегу, сладким без чувства вины, насыщением, тревогой из-за веса и привычкой вспоминать о себе только тогда, когда сил уже нет.\n\n"
+    "🗓 <b>6 июля открываются продажи</b> в моё групповое сопровождение.\n\n"
+    "Это формат для тех, кто <b>устал каждый раз начинать заново</b> и хочет наконец выстроить питание спокойно — с поддержкой, понятной системой и маленькими шагами, которые правда получается делать 🌿\n\n"
+    "✨ Для участниц <b>первого дня продаж</b> будет бонус — индивидуальная консультация с разбором питания, которую можно использовать в течение года.\n\n"
+    "Если ты узнала себя в аудио, я очень хочу поработать с тобой лично 💛\n\n"
+    "<b>Старт продаж — 6 июля.</b>\n"
+    "В группе будет всего <b>6 мест.</b>\n"
+    "Запишись в лист ожидания, чтобы не пропустить подробности 👇"
+)
+
 # ==================== КНОПКИ ====================
 
 def kb_subscribe():
@@ -190,6 +217,11 @@ def kb_day7():
         [InlineKeyboardButton("📋 Лист ожидания", callback_data="btn_waitlist_d7")],
     ])
 
+def kb_day9():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("📋 Вступить", callback_data="btn_waitlist_d9")],
+    ])
+
 def kb_final_1():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("💬 Telegram-канал", callback_data="btn_channel_final")],
@@ -208,6 +240,7 @@ BUTTON_URLS = {
     "btn_group_d5": "https://myanutrition.ru/group",
     "btn_waitlist_d6": "https://t.me/+jeRJ8g609qllZWQy",
     "btn_waitlist_d7": "https://t.me/+jeRJ8g609qllZWQy",
+    "btn_waitlist_d9": "https://t.me/+jeRJ8g609qllZWQy",
     "btn_channel_final": "https://t.me/myanutrition",
     "btn_podcast_final": "https://podcast.ru/1742928597",
     "btn_group_final": "https://myanutrition.ru/group",
@@ -219,6 +252,7 @@ BUTTON_NAMES = {
     "btn_group_d5": "Подробнее о группе",
     "btn_waitlist_d6": "📋 Лист ожидания",
     "btn_waitlist_d7": "📋 Лист ожидания",
+    "btn_waitlist_d9": "📋 Вступить",
     "btn_channel_final": "💬 Telegram-канал",
     "btn_podcast_final": "🎙️ Подкаст",
     "btn_group_final": "🌿 Групповое сопровождение",
@@ -453,7 +487,18 @@ async def send_day1(bot, user_id):
 
 
 async def send_day(bot, user_id, day):
-    if day > 7:
+    if day > 9:
+        return
+
+    # Дни 8 и 9 — особая логика
+    if day == 8:
+        await safe_send(bot, user_id, bot.send_message, TEXT_DAY8, parse_mode="HTML")
+        update_last_day(user_id, day)
+        return
+
+    if day == 9:
+        await safe_send(bot, user_id, bot.send_photo, PHOTO_DAY9, caption=TEXT_DAY9, parse_mode="HTML", reply_markup=kb_day9())
+        update_last_day(user_id, day)
         return
 
     await safe_send(bot, user_id, bot.send_message, TEXTS_BEFORE[day], parse_mode="Markdown")
@@ -498,7 +543,7 @@ async def daily_job(context: ContextTypes.DEFAULT_TYPE):
             days_passed = (today - start_date).days
             next_day = last_day + 1
 
-            if next_day <= 7 and days_passed == (next_day - 1):
+            if next_day <= 9 and days_passed == (next_day - 1):
                 await send_day(context.bot, user_id, next_day)
                 await asyncio.sleep(2)
         except Exception as e:
