@@ -497,7 +497,9 @@ async def send_day(bot, user_id, day):
         return
 
     if day == 9:
-        await safe_send(bot, user_id, bot.send_photo, PHOTO_DAY9, caption=TEXT_DAY9, parse_mode="HTML", reply_markup=kb_day9())
+        await safe_send(bot, user_id, bot.send_photo, PHOTO_DAY9)
+        await asyncio.sleep(1)
+        await safe_send(bot, user_id, bot.send_message, TEXT_DAY9, parse_mode="HTML", reply_markup=kb_day9())
         update_last_day(user_id, day)
         return
 
