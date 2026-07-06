@@ -497,6 +497,8 @@ async def send_day(bot, user_id, day):
         return
 
     if day == 9:
+        await safe_send(bot, user_id, bot.send_photo, PHOTO_DAY9)
+        await asyncio.sleep(1)
         await safe_send(bot, user_id, bot.send_message, TEXT_DAY9, parse_mode="HTML", reply_markup=kb_day9())
         update_last_day(user_id, day)
         return
@@ -671,6 +673,44 @@ async def fixdb_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"✅ Исправлено записей: {fixed}\nУстановлена дата: {today}")
 
 
+async def broadcast7_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Рассылка только тем кто прошёл 7+ дней"""
+    if update.effective_user.id != ADMIN_CHAT_ID:
+        return
+
+    TEXT_BROADCAST = (
+        "Добрый вечер! Только что открылись продажи в групповое сопровождение. "
+        "В листе ожидания 112 человек, поэтому занимайте место прямо сейчас\n\n"
+        "В группе будет всего 6 девушек, которые решительно готовы наладить отношения с едой\n\n"
+        "Через три месяца будете благодарны себе за это решение. До встречи в группе! 🙌"
+    )
+
+    kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton("Занять место", url="https://myanutrition.ru/group/#rec2372331003")]
+    ])
+
+    conn = sqlite3.connect("users.db")
+    c = conn.cursor()
+    c.execute("SELECT user_id FROM users WHERE last_day >= 7 AND blocked = 0")
+    users = c.fetchall()
+    conn.close()
+
+    await update.message.reply_text(f"🚀 Начинаю рассылку для {len(users)} человек (last_day >= 7)...")
+
+    sent = 0
+    failed = 0
+    for (user_id,) in users:
+        try:
+            await context.bot.send_message(user_id, TEXT_BROADCAST, reply_markup=kb)
+            sent += 1
+            await asyncio.sleep(0.5)
+        except Exception as e:
+            failed += 1
+            logging.error(f"Ошибка рассылки для {user_id}: {e}")
+
+    await update.message.reply_text(f"✅ Рассылка завершена!\nОтправлено: {sent}\nОшибок: {failed}")
+
+
 async def runnow_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_CHAT_ID:
         return
@@ -711,6 +751,7 @@ def main():
     app.add_handler(CommandHandler("stats", stats_command))
     app.add_handler(CommandHandler("runnow", runnow_command))
     app.add_handler(CommandHandler("fixdb", fixdb_command))
+    app.add_handler(CommandHandler("broadcast7", broadcast7_command))
     app.add_handler(CallbackQueryHandler(button_handler))
 
     job_queue = app.job_queue
