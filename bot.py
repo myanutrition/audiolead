@@ -673,6 +673,43 @@ async def fixdb_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"✅ Исправлено записей: {fixed}\nУстановлена дата: {today}")
 
 
+async def broadcast9_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Рассылка только тем кто прошёл 9+ дней"""
+    if update.effective_user.id != ADMIN_CHAT_ID:
+        return
+
+    TEXT_BROADCAST9 = (
+        "ПРИОТКРЫВАЮ ЗАВЕСУ ТАЙНЫ ⭐️\n\n"
+        "<b>Погрузитесь в атмосферу группового сопровождения за 10 минут</b>\n\n"
+        "В трёх коротких видео вы на практике увидите <b>три главных принципа</b>, которые я использую в групповом сопровождении:\n\n"
+        "· Выбор\n"
+        "· Личность\n"
+        "· Сценарии\n\n"
+        "Как это связано с питанием и похудением? Скорее <a href=\"https://t.me/myanutrition/2285\">включайте видео</a> и узнаете"
+    )
+
+    conn = sqlite3.connect("users.db")
+    c = conn.cursor()
+    c.execute("SELECT user_id FROM users WHERE last_day >= 9 AND blocked = 0")
+    users = c.fetchall()
+    conn.close()
+
+    await update.message.reply_text(f"🚀 Начинаю рассылку для {len(users)} человек (last_day >= 9)...")
+
+    sent = 0
+    failed = 0
+    for (user_id,) in users:
+        try:
+            await context.bot.send_message(user_id, TEXT_BROADCAST9, parse_mode="HTML")
+            sent += 1
+            await asyncio.sleep(0.5)
+        except Exception as e:
+            failed += 1
+            logging.error(f"Ошибка рассылки для {user_id}: {e}")
+
+    await update.message.reply_text(f"✅ Рассылка завершена!\nОтправлено: {sent}\nОшибок: {failed}")
+
+
 async def broadcast7_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Рассылка только тем кто прошёл 7+ дней"""
     if update.effective_user.id != ADMIN_CHAT_ID:
@@ -752,6 +789,7 @@ def main():
     app.add_handler(CommandHandler("runnow", runnow_command))
     app.add_handler(CommandHandler("fixdb", fixdb_command))
     app.add_handler(CommandHandler("broadcast7", broadcast7_command))
+    app.add_handler(CommandHandler("broadcast9", broadcast9_command))
     app.add_handler(CallbackQueryHandler(button_handler))
 
     job_queue = app.job_queue
