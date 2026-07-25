@@ -172,16 +172,12 @@ TEXT_DAY9 = (
     "Пока мой голос звучал в твоих наушниках, ты могла заметить важную вещь. Сложные отношения с едой — не от незнания и не потому, что ты слабовольная 🤍\n\n"
     "Скорее всего, ты и так прекрасно понимаешь, что надо есть регулярнее, добавлять белок, овощи, не доводить себя до дикого голода, не жить на кофе, кусочничестве и сладком до вечера.\n\n"
     "Но потом день идёт не по плану. Обед опять где-то между делами, сил к вечеру нет, сладкое становится самым быстрым способом себя поддержать, а потом думаешь: <i>«ну всё, завтра нормально начну»</i> 😔\n\n"
-    "Так можно <b>годами</b> читать полезные материалы, сохранять рецепты, проходить тесты, слушать подкасты, понимать причины перееданий — и всё равно чувствовать, что тема еды занимает слишком много места в голове.\n\n"
-    "Я очень хорошо понимаю, как это <b>выматывает</b> 💛\n\n"
-    "В групповом сопровождении мы будем работать не только с продуктами, которые ты ешь. В первую очередь мы разберёмся с тем, что стоит за этим: пропусками еды, усталостью, эмоциональным голодом, перекусами на бегу, сладким без чувства вины, насыщением, тревогой из-за веса и привычкой вспоминать о себе только тогда, когда сил уже нет.\n\n"
-    "🗓 <b>6 июля открываются продажи</b> в моё групповое сопровождение.\n\n"
-    "Это формат для тех, кто <b>устал каждый раз начинать заново</b> и хочет наконец выстроить питание спокойно — с поддержкой, понятной системой и маленькими шагами, которые правда получается делать 🌿\n\n"
-    "✨ Для участниц <b>первого дня продаж</b> будет бонус — индивидуальная консультация с разбором питания, которую можно использовать в течение года.\n\n"
-    "Если ты узнала себя в аудио, я очень хочу поработать с тобой лично 💛\n\n"
-    "<b>Старт продаж — 6 июля.</b>\n"
-    "В группе будет всего <b>6 мест.</b>\n"
-    "Запишись в лист ожидания, чтобы не пропустить подробности 👇"
+    "Так можно годами читать полезные материалы, сохранять рецепты, проходить тесты, слушать подкасты, понимать причины перееданий — и всё равно чувствовать, что тема еды занимает слишком много места в голове.\n\n"
+    "Я очень хорошо понимаю, как это выматывает 💛\n\n"
+    "В групповом сопровождении мы работаем не только с продуктами, которые ты ешь. В первую очередь мы разбираемся с тем, что стоит за этим: пропусками еды, усталостью, эмоциональным голодом, перекусами на бегу, сладким без чувства вины, насыщением, тревогой из-за веса и привычкой вспоминать о себе только тогда, когда сил уже нет.\n\n"
+    "Групповое сопровождение — это формат для тех, кто устал каждый раз начинать заново и хочет наконец выстроить питание спокойно — с поддержкой, понятной системой и маленькими шагами, которые правда получается делать 🌿\n\n"
+    "Узнай подробнее о группе на сайте\n"
+    "А также запишись в лист ожидания, чтобы не пропустить подробности! 👇"
 )
 
 # ==================== КНОПКИ ====================
@@ -209,17 +205,18 @@ def kb_day5():
 
 def kb_day6():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("📋 Лист ожидания", callback_data="btn_waitlist_d6")],
+        [InlineKeyboardButton("🌿 Подробнее о группе", callback_data="btn_group_d6")],
     ])
 
 def kb_day7():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("📋 Лист ожидания", callback_data="btn_waitlist_d7")],
+        [InlineKeyboardButton("🌿 Подробнее о группе", callback_data="btn_group_d7")],
     ])
 
 def kb_day9():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("📋 Вступить", callback_data="btn_waitlist_d9")],
+        [InlineKeyboardButton("🌿 Подробнее о группе", callback_data="btn_group_d9")],
+        [InlineKeyboardButton("📋 Лист ожидания", callback_data="btn_waitlist_d9")],
     ])
 
 def kb_final_1():
@@ -227,7 +224,6 @@ def kb_final_1():
         [InlineKeyboardButton("💬 Telegram-канал", callback_data="btn_channel_final")],
         [InlineKeyboardButton("🎙️ Подкаст", callback_data="btn_podcast_final")],
         [InlineKeyboardButton("🌿 Групповое сопровождение", callback_data="btn_group_final")],
-        [InlineKeyboardButton("📋 Лист ожидания", callback_data="btn_waitlist_final")],
     ])
 
 def kb_final_3():
@@ -238,25 +234,25 @@ def kb_final_3():
 # URL для кнопок
 BUTTON_URLS = {
     "btn_group_d5": "https://myanutrition.ru/group",
-    "btn_waitlist_d6": "https://t.me/+jeRJ8g609qllZWQy",
-    "btn_waitlist_d7": "https://t.me/+jeRJ8g609qllZWQy",
-    "btn_waitlist_d9": "https://t.me/+jeRJ8g609qllZWQy",
+    "btn_group_d6": "https://myanutrition.ru/group",
+    "btn_group_d7": "https://myanutrition.ru/group",
+    "btn_group_d9": "https://myanutrition.ru/group",
+    "btn_waitlist_d9": "https://t.me/+DaVMfdPEMn8zYTZi",
     "btn_channel_final": "https://t.me/myanutrition",
     "btn_podcast_final": "https://podcast.ru/1742928597",
     "btn_group_final": "https://myanutrition.ru/group",
-    "btn_waitlist_final": "https://t.me/+jeRJ8g609qllZWQy",
     "btn_feedback": "https://t.me/MyaNutrition_Bot",
 }
 
 BUTTON_NAMES = {
     "btn_group_d5": "Подробнее о группе",
-    "btn_waitlist_d6": "📋 Лист ожидания",
-    "btn_waitlist_d7": "📋 Лист ожидания",
-    "btn_waitlist_d9": "📋 Вступить",
+    "btn_group_d6": "🌿 Подробнее о группе",
+    "btn_group_d7": "🌿 Подробнее о группе",
+    "btn_group_d9": "🌿 Подробнее о группе",
+    "btn_waitlist_d9": "📋 Лист ожидания",
     "btn_channel_final": "💬 Telegram-канал",
     "btn_podcast_final": "🎙️ Подкаст",
     "btn_group_final": "🌿 Групповое сопровождение",
-    "btn_waitlist_final": "📋 Лист ожидания",
     "btn_feedback": "✍️ Написать",
 }
 
@@ -394,7 +390,7 @@ def get_stats():
 
     # По дням
     days_stats = {}
-    for day in range(1, 8):
+    for day in range(1, 10):
         c.execute("SELECT COUNT(*) FROM users WHERE last_day = ? AND blocked = 0", (day,))
         days_stats[day] = c.fetchone()[0]
 
@@ -673,6 +669,62 @@ async def fixdb_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"✅ Исправлено записей: {fixed}\nУстановлена дата: {today}")
 
 
+async def broadcast_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Универсальная рассылка.
+    Использование:
+    /broadcast all ТЕКСТ — всем пользователям
+    /broadcast 7 ТЕКСТ — тем у кого last_day >= 7
+    /broadcast 9 ТЕКСТ — тем у кого last_day >= 9
+    """
+    if update.effective_user.id != ADMIN_CHAT_ID:
+        return
+
+    args = context.args
+    if not args or len(args) < 2:
+        await update.message.reply_text(
+            "Использование:\n"
+            "/broadcast all ТЕКСТ — всем\n"
+            "/broadcast 7 ТЕКСТ — тем кто на дне 7+\n"
+            "/broadcast 9 ТЕКСТ — тем кто на дне 9+"
+        )
+        return
+
+    target = args[0].lower()
+    text = " ".join(args[1:])
+
+    conn = sqlite3.connect("users.db")
+    c = conn.cursor()
+
+    if target == "all":
+        c.execute("SELECT user_id FROM users WHERE blocked = 0 AND start_date IS NOT NULL")
+    elif target.isdigit():
+        day = int(target)
+        c.execute("SELECT user_id FROM users WHERE last_day >= ? AND blocked = 0", (day,))
+    else:
+        await update.message.reply_text("Неверный параметр. Используй: all, 7, 8, 9 и т.д.")
+        conn.close()
+        return
+
+    users = c.fetchall()
+    conn.close()
+
+    await update.message.reply_text(f"🚀 Начинаю рассылку для {len(users)} человек...")
+
+    sent = 0
+    failed = 0
+    for (user_id,) in users:
+        try:
+            await context.bot.send_message(user_id, text, parse_mode="HTML")
+            sent += 1
+            await asyncio.sleep(0.5)
+        except Exception as e:
+            failed += 1
+            logging.error(f"Ошибка рассылки для {user_id}: {e}")
+
+    await update.message.reply_text(f"✅ Рассылка завершена!\nОтправлено: {sent}\nОшибок: {failed}")
+
+
 async def broadcast9_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Рассылка только тем кто прошёл 9+ дней"""
     if update.effective_user.id != ADMIN_CHAT_ID:
@@ -769,7 +821,7 @@ async def test_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await asyncio.sleep(2)
     await send_day1(context.bot, user_id)
 
-    for day in range(2, 8):
+    for day in range(2, 10):
         await asyncio.sleep(2)
         await send_day(context.bot, user_id, day)
 
@@ -790,6 +842,7 @@ def main():
     app.add_handler(CommandHandler("fixdb", fixdb_command))
     app.add_handler(CommandHandler("broadcast7", broadcast7_command))
     app.add_handler(CommandHandler("broadcast9", broadcast9_command))
+    app.add_handler(CommandHandler("broadcast", broadcast_command))
     app.add_handler(CallbackQueryHandler(button_handler))
 
     job_queue = app.job_queue
