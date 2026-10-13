@@ -46,6 +46,8 @@ TEXT_START = (
 
 TEXT_AFTER_INTRO = "Каждый день я буду присылать одно аудио и небольшое задание для наблюдения за собой 📝"
 
+TEXT_SEE_YOU_TOMORROW = "Следующее аудио придёт завтра в 10:00 по Москве 🎧"
+
 TEXT_MIGRATE = (
     "Привет! Я обновила материалы — теперь здесь новый бесплатный мини-курс «Как забыть про диеты навсегда» 🌿\n\n"
     "Три коротких аудио о том, почему мы годами пытаемся наладить питание — и как из этого выйти.\n\n"
@@ -409,6 +411,8 @@ async def send_day1(bot, user_id):
     await safe_send(bot, user_id, bot.send_audio, AUDIOS[1])
     await asyncio.sleep(1)
     await safe_send(bot, user_id, bot.send_message, TEXTS_AFTER[1], parse_mode="HTML")
+    await asyncio.sleep(1)
+    await safe_send(bot, user_id, bot.send_message, TEXT_SEE_YOU_TOMORROW)
 
 
 async def send_day(bot, user_id, day):
@@ -426,6 +430,10 @@ async def send_day(bot, user_id, day):
         keyboard = kb_day3()
 
     await safe_send(bot, user_id, bot.send_message, TEXTS_AFTER[day], parse_mode="HTML", reply_markup=keyboard)
+
+    if day < MAX_DAY:
+        await asyncio.sleep(1)
+        await safe_send(bot, user_id, bot.send_message, TEXT_SEE_YOU_TOMORROW)
 
     update_last_day(user_id, day)
 
