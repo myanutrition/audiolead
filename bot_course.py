@@ -16,6 +16,7 @@ CHANNEL_USERNAME = "@myanutrition"
 SEND_HOUR = 7
 SEND_MINUTE = 0
 ADMIN_CHAT_ID = 7917196527
+ADMIN_IDS = {7917196527, 950626021}  # Даяна, Юля
 MAX_DAY = 3
 
 # ==================== FILE IDs ====================
@@ -536,7 +537,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_CHAT_ID:
+    if update.effective_user.id not in ADMIN_IDS:
         return
 
     s = get_stats()
